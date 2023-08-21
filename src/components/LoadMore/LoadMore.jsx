@@ -1,6 +1,6 @@
-import Loader from 'components/LoadMore/Loader/Loader';
+import Loader from 'components/LoadMore/Loader';
 import { LoadMoreContainer } from './LoadMore.styled';
-import ButtonLoadMore from 'components/LoadMore/ButtonLoadMore/ButtonLoadMore';
+import ButtonLoadMore from 'components/LoadMore/ButtonLoadMore';
 
 export default function LoadMore({ isLoading, onClick }) {
   return (

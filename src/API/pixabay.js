@@ -7,7 +7,6 @@ const DEF_OPTIONS = {
   key: API_KEY,
   image_type: 'photo',
   orientation: 'horizontal',
-  safesearch: true,
 };
 
 export default async function pixabay(options) {
@@ -28,8 +27,13 @@ export default async function pixabay(options) {
     return response;
   } catch (err) {
     const { response } = err;
-    if (response?.data) throw { message: response.data };
 
-    throw response || err;
+    if (response?.data) {
+      console.error(response.data);
+    } else {
+      console.error(response || err);
+    }
+
+    throw new Error('Something went wrong. Try reload the page.');
   }
 }

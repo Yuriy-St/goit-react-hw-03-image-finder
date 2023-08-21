@@ -4,33 +4,53 @@ import SearchBar from 'components/SearchBar/SearchBar';
 import ImageGallery from 'components/ImageGallery/ImageGallery';
 import LoadMore from 'components/LoadMore/LoadMore';
 import pixabay from 'API/pixabay';
+import { ErrorMessage } from 'components/ErrorMessage/ErrorMessage.styled';
+
+const STATUS = {
+  IDLE: 'idle',
+  PENDING: 'pending',
+  RESOLVED: 'resolved',
+  REJECTED: 'rejected',
+};
 
 const DEFAULT_STATE = {
   query: '',
-  isLoading: false,
+  status: STATUS.IDLE,
   page: 1,
-  isError: false,
+  error: '',
 };
+
+const PER_PAGE = 12;
 export default class App extends Component {
   state = {
     ...DEFAULT_STATE,
     photos: [],
   };
 
-  async componentDidUpdate(_, prevState) {
-    if (
+  componentDidUpdate(_, prevState) {
+    const isNewQuery =
       prevState.page !== this.state.page ||
-      prevState.query !== this.state.query
-    )
-      this.fetchPhotos();
+      prevState.query !== this.state.query;
+
+    if (isNewQuery) this.fetchPhotos();
   }
 
   handleSubmit = query => {
-    this.setState({
+    let status = STATUS.IDLE;
+    let error = '';
+
+    if (query === '') {
+      status = STATUS.REJECTED;
+      error = 'Please enter a query!';
+    }
+
+    this.setState(() => ({
       ...DEFAULT_STATE,
       photos: [],
       query,
-    });
+      status,
+      error,
+    }));
   };
 
   getNormalizedPhotos = photos => {
@@ -50,32 +70,46 @@ export default class App extends Component {
 
   async fetchPhotos() {
     const { query, page } = this.state;
-    const per_page = 12;
-    if (!query) return;
+    if (!query) {
+      this.setState({
+        status: STATUS.REJECTED,
+        error: 'Please enter a query!',
+      });
+      return;
+    }
+
+    this.setState({
+      status: STATUS.PENDING,
+    });
 
     try {
-      this.togleIsLoading();
-
       const {
-        data: { hits },
+        data: { total, hits },
       } = await pixabay({
         q: query,
         page,
-        per_page,
+        per_page: PER_PAGE,
       });
 
+      if (total === 0) {
+        this.setState({
+          status: STATUS.REJECTED,
+          error: 'Nothing was found',
+        });
+        return;
+      }
+      const isLastPage = Math.ceil(total / PER_PAGE) <= page;
+      const status = isLastPage ? STATUS.IDLE : STATUS.RESOLVED;
       this.setState(prevState => ({
         photos: [...prevState.photos, ...hits],
+        status,
       }));
     } catch (error) {
-      console.error(error.message);
-    } finally {
-      this.togleIsLoading();
+      this.setState({
+        status: STATUS.REJECTED,
+        error: error.message,
+      });
     }
-  }
-
-  togleIsLoading() {
-    this.setState({ isLoading: !this.state.isLoading });
   }
 
   pageIncrease = () => {
@@ -83,15 +117,20 @@ export default class App extends Component {
   };
 
   render() {
-    const { photos, isLoading } = this.state;
+    const { status, photos, error } = this.state;
+    const hasPhotos = photos.length !== 0;
+
     return (
       <Container>
         <SearchBar onSubmit={this.handleSubmit} />
-        {photos.length !== 0 && (
-          <>
-            <ImageGallery photos={photos} />
-          </>
-        )}
+
+        {hasPhotos && <ImageGallery photos={photos} />}
+
+        {status === STATUS.PENDING && <LoadMore isLoading />}
+
+        {status === STATUS.RESOLVED && <LoadMore onClick={this.pageIncrease} />}
+
+        {status === STATUS.REJECTED && <ErrorMessage>{error}</ErrorMessage>}
       </Container>
     );
   }

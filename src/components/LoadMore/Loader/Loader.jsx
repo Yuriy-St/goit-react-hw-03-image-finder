@@ -1,5 +1,5 @@
-import { MagnifyingGlass } from 'react-loader-spinner';
+import { InfinitySpin } from 'react-loader-spinner';
 
 export default function Loader() {
-  return <MagnifyingGlass />;
+  return <InfinitySpin />;
 }
