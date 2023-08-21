@@ -56,8 +56,6 @@ export default class App extends Component {
   };
 
   getNormalizedPhotos = photos => {
-    console.log(`Photos`, photos);
-    // return [];
     const normPhotos = photos.map(
       ({ id, tags, webformatURL, largeImageURL }) => ({
         id,
