@@ -5,6 +5,7 @@ import ImageGallery from 'components/ImageGallery/ImageGallery';
 import LoadMore from 'components/LoadMore/LoadMore';
 import pixabay from 'API/pixabay';
 import { ErrorMessage } from 'components/ErrorMessage/ErrorMessage.styled';
+import Modal from 'components/Modal/Modal';
 
 const STATUS = {
   IDLE: 'idle',
@@ -16,7 +17,7 @@ const STATUS = {
 const DEFAULT_STATE = {
   query: '',
   status: STATUS.IDLE,
-  page: 1,
+  page: 0,
   error: '',
 };
 
@@ -39,7 +40,7 @@ export default class App extends Component {
     let status = STATUS.IDLE;
     let error = '';
 
-    if (query === '') {
+    if (query.trim() === '') {
       status = STATUS.REJECTED;
       error = 'Please enter a query!';
     }
@@ -51,6 +52,8 @@ export default class App extends Component {
       status,
       error,
     }));
+
+    this.pageIncrease();
   };
 
   getNormalizedPhotos = photos => {
@@ -93,11 +96,13 @@ export default class App extends Component {
 
       if (total === 0) {
         this.setState({
+          photos: [],
           status: STATUS.REJECTED,
           error: 'Nothing was found',
         });
         return;
       }
+
       const isLastPage = Math.ceil(total / PER_PAGE) <= page;
       const status = isLastPage ? STATUS.IDLE : STATUS.RESOLVED;
       this.setState(prevState => ({
@@ -117,14 +122,16 @@ export default class App extends Component {
   };
 
   render() {
-    const { status, photos, error } = this.state;
+    const { status, photos, showModal, error } = this.state;
     const hasPhotos = photos.length !== 0;
 
     return (
       <Container>
         <SearchBar onSubmit={this.handleSubmit} />
 
-        {hasPhotos && <ImageGallery photos={photos} />}
+        {hasPhotos && (
+          <ImageGallery photos={this.getNormalizedPhotos(photos)} />
+        )}
 
         {status === STATUS.PENDING && <LoadMore isLoading />}
 
