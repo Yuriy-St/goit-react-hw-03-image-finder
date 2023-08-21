@@ -5,7 +5,6 @@ import ImageGallery from 'components/ImageGallery/ImageGallery';
 import LoadMore from 'components/LoadMore/LoadMore';
 import pixabay from 'API/pixabay';
 import { ErrorMessage } from 'components/ErrorMessage/ErrorMessage.styled';
-import Modal from 'components/Modal/Modal';
 
 const STATUS = {
   IDLE: 'idle',
@@ -122,7 +121,7 @@ export default class App extends Component {
   };
 
   render() {
-    const { status, photos, showModal, error } = this.state;
+    const { status, photos, error } = this.state;
     const hasPhotos = photos.length !== 0;
 
     return (
